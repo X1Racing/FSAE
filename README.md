@@ -2,33 +2,46 @@
 
 **Version 1.1** · by Mac McAlpine, [X1Racing.com](https://x1racing.com) · [MIT License](LICENSE)
 
-A single-page web app that designs a rule-compliant Formula SAE tube-frame chassis around a hypothetical single-cylinder engine, solves the suspension, steering and shocks, and exports every part ready to order from SendCutSend or OSHcut.
+**Open the builder:** [https://x1racing.com/fsae](https://x1racing.com/fsae)
 
-The built page is [`index.html`](./index.html).
+That address is the hosted place to load this page. Publishing there is still in progress, so the link is the destination and is not confirmed live.
 
-> This version shows the workflow and the parametric thinking that super-intelligent design tools make possible. Rebuild the design around 3D models of your real engine, shocks, uprights, axles, wheels and battery before you order anything.
+The copy in this repository is [`index.html`](./index.html). Download that file and open it in a browser to run the builder on your own machine.
+
+Set the wheelbase, driver fit, and suspension targets. The builder solves a tube-frame chassis around a hypothetical single-cylinder engine, checks it against Formula SAE rules, and writes STEP and DXF files for SendCutSend or OSHcut. Treat the result as a rule-minded baseline. Swap in 3D models of the engine, driveline, and hubs you will actually use before you order parts.
+
+> This version is meant to show the workflow and the parametric thinking that super-intelligent design tools make possible. It is not a finished, build-ready car. Before you order anything, rebuild the design around 3D models of the parts you will actually use: engine, shocks, spindles, axles, wheels, battery, and the rest. Then check every fit, load, and rule yourself.
 
 ## What it does
-- **FSAE rule checks, kept separate from the builder's own design checks:** 95th percentile template and rollover envelope (front-hoop line and the main-hoop-to-brace line), Size A/B/C tubing, bent front and main hoops, bracing, side impact, front bulkhead and its triangulation, firewall, harness eyes, wheelbase, track and travel.
-- **Suspension and steering:** selectable camber gain, zero-bump-steer tie rods, solved Ackermann, a 3D linkage solve with camber, toe and Ackermann plots, and animated travel.
-- **Shocks:** FOX DHX / DHX2 coil-overs from a catalog, picked separately front and rear (the rear defaults to a longer DHX 230 x 65). Front eyes on a through-bolt in both lower-arm legs; rear eyes on a compact clevis ear on the upright that straddles the toe link to keep the steer moment low. Spring and damper clearance through travel.
-- **Fabrication:** laser-cut self-jigging uprights, turned clevis tabs, coped tubes, bent hoops, and sheet-metal build jigs (two plates per tube, clear of the welds, egg-crated onto spars that hook over the center section).
-- **Human factors:** seated driver template with seat shell and foam over the floor tubes, wheel, column, U-joints, pedal box, and an animated egress.
-- **Ready to order:** one STEP package: a STEP solid per part (straight tubes laid along +Y as tube-laser shops ask), the frame assembly, plate DXFs, tube cope templates, hoop drawings, a manifest and design.json. Save and Load a design.json to share a design.
 
-## Run it
-Open `index.html` in a browser. The page loads [three.js r128](https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js), [OrbitControls](https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js), and [JSZip](https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js) from public CDNs, and typefaces from Google Fonts. In-page links are relative or hashes, so the file also runs under the GitHub Pages project path `/FSAE/`.
+One parametric model, from rules to cut files.
 
-## GitHub Pages
-The site is not live until this change is merged and Pages is enabled.
+- **Rules.** 95th percentile driver template, Size A, B, and C tubing, bent front and main hoops and bracing, side impact, front bulkhead support triangulation, and firewall. Checks update as you change inputs. Formula SAE rule checks stay separate from the builder's own design checks (suspension, shocks, uprights, steering, packaging, human factors, and build jigs).
+- **Suspension and steering.** Choose front and rear camber gain. Pickups move to hit that gain, tie rods are placed for near-zero bump steer, and the steering arm angle is solved toward an Ackermann target. A 3D linkage solve plots camber, toe, and Ackermann. Suspension travel can be animated.
+- **Shocks.** FOX DHX and DHX2 coil-overs from a catalog, chosen separately front and rear. The rear defaults to a longer DHX 230 × 65. Front eyes sit on a through-bolt through both lower-arm legs. Rear eyes sit on a compact clevis on the upright that straddles the toe link. The builder checks spring and damper clearance through travel and reports steer moment from the rear shock.
+- **Driver.** A 95th percentile driver sets hoop heights, seat, pedal box, and wheel reach, with clearance checks for legs, rack, and column. The driver sits on a seat shell and foam over the floor tubes. Egress can be animated.
+- **Drivetrain.** Chain drive to a limited-slip differential with halfshafts. Laser-cut uprights use bolt-on flange bearings and Wilwood PS-1 calipers, with a laser-cut rotor and a simple hub. Wheels are generic 13 in or 10 in, with a place for a small motorcycle battery.
+- **Fabrication model.** Laser-cut self-jigging uprights, turned clevis tabs, coped tubes, bent hoops, and sheet-metal build jigs: two plates per tube, clear of the welds, egg-crated onto spars that hook over the center section.
+- **Parts.** Click a tube or plate in the list or the 3D view to open its drawing. Save and load a `design.json` to share a design.
 
-1. Merge into `main`.
-2. Settings → Pages → Build and deployment → Source: **GitHub Actions**.
-3. `.github/workflows/pages.yml` rebuilds `index.html` and publishes it with `LICENSE` and this notice. The project URL is `https://x1racing.github.io/FSAE/`.
+## From inputs to files
 
-Paths are case-sensitive on Pages. Use `index.html` and `LICENSE` exactly. No root-absolute or machine-local assets are required to run the builder.
+1. Open the builder and set vehicle, driver, suspension, and shock inputs in the left rail.
+2. Watch the Checks tab. Fix any Formula SAE rule failure, then review the design checks.
+3. Use the Geometry tab for camber, bump steer, Ackermann, uprights, and shocks.
+4. Press Optimize to search the main dimensions for a lighter, cheaper frame that still passes the hard rule checks.
+5. Export one STEP package. Upload those files to [SendCutSend](https://sendcutsend.com) or [OSHcut](https://www.oshcut.com) when you want a price from the vendor.
 
-## Develop
+The package contains a STEP solid per part (straight tubes laid along +Y, as tube-laser shops ask), the frame assembly, plate DXFs, 1:1 tube cope templates, hoop drawings, a manifest, and `design.json`.
+
+Prices inside the builder are planning estimates from editable rates. They are not a quote. Vendor prices come from uploading the files on the vendor's site. SendCutSend's published 4130 round list is short (1.000 × .095 in and 1.000 × .065 in at the time of writing); the builder flags tube sizes outside it. The bent hoops are over 60 in and need a tube bender, not a tube laser.
+
+## Run and build locally
+
+Download [`index.html`](./index.html) and open it in a browser. The page loads [three.js r128](https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js), [OrbitControls](https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js), and [JSZip](https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js) from public CDNs, and typefaces from Google Fonts.
+
+Rebuild the page from source, or generate and check STEP files for the default design:
+
 ```
 src/shell.html   page markup and styles (welcome page + builder)
 src/core.js      geometry engine: suspension, steering, shocks, frame, copes, plates, jigs, DXF, STEP, rules, costing
@@ -37,17 +50,29 @@ build.py         assembles index.html (or dist/artifact.html for claude.ai)
 tools/           STEP generator for tests, independent STEP validator, hero image generator
 docs/prompt.md   the prompt that builds this tool
 ```
+
 ```
 python build.py                      # writes index.html
 node tools/gen_step.js               # writes STEP files to out/ from the default design
 python tools/validate_step.py 'out/*.step'
 ```
 
-## Ordering notes
-- SendCutSend and OSHcut cut tubes from 3D STEP files, one straight tube per file. SendCutSend's published 4130 round list is short (1.000 x .095 and 1.000 x .065 in at the time of writing); the builder flags tube sizes outside it.
-- The bent hoops are over 60 in and need a tube bender, not a tube laser.
-
 ## License
-MIT License. Copyright (c) 2026 Mac McAlpine, X1 Racing. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md). The X1 Racing name and logo are trademarks and are not covered by the license. CDN libraries and fonts stay under their own licenses.
+
+MIT License. Copyright (c) 2026 Mac McAlpine, X1 Racing. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
+
+The code, the prompt, and the files the builder exports are under that license. The X1 Racing name and logo are trademarks and are not covered by it. three.js, OrbitControls, JSZip, and the Google Fonts on the page stay under their own licenses.
+
+Credit line: "FSAE Chassis Builder by Mac McAlpine, X1Racing.com, licensed under the MIT License."
+
+## Before you cut metal
+
+Design output is a study model. Verify it against the current Formula SAE rules and your own engineering review before fabrication. The export notes that harness eyes must be supplier weld-on eyes over a welded tube insert, and that no laser-cut harness tabs are included. Impact attenuator, anti-intrusion plate, head restraint, bodywork, and brake lines are outside the package. Rebuild around the real engine, shocks, spindles, axles, wheels, and battery, then check every fit, load, and rule yourself.
+
+## About
+
+Mac McAlpine founded X1 Racing. He is a former mentor of the UNC Charlotte FSAE team and a former professor of Advanced Motorsports Instrumentation, Electric Drivetrains, and Senior Design at UNC Charlotte. He was a research and development engineer for Michael Waltrip Racing and a support engineer for Pi Research, now Cosworth Electronics. He holds a BS in Computer Engineering and an MS in Industrial Management, both from Clemson University.
+
+The welcome page points people interested in FSAE to Jim Fox at UNC Charlotte's Alan D. Kulwicki Motorsports Laboratory: [Jim Fox](https://engineering.charlotte.edu/people/james-fox/), [Motorsports at UNC Charlotte](https://motorsports.charlotte.edu/), [UNC Charlotte](https://www.charlotte.edu).
 
 More from X1 Racing: [fly the sim](https://x1racing.com/sim) · [Flying Car Regulation Breakout](https://x1racing.com/game) · [design your own rule-compliant X1 Racing SkyRacer](https://buildflyingcars.com)
