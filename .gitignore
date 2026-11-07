@@ -1,0 +1,6 @@
+dist/
+out/
+_site/
+node_modules/
+__pycache__/
+*.zip
