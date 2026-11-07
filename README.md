@@ -4,6 +4,8 @@
 
 A single-page web app that designs a rule-compliant Formula SAE tube-frame chassis around a hypothetical single-cylinder engine, solves the suspension, steering and shocks, and exports every part ready to order from SendCutSend or OSHcut.
 
+The built page is [`index.html`](./index.html).
+
 > This version shows the workflow and the parametric thinking that super-intelligent design tools make possible. Rebuild the design around 3D models of your real engine, shocks, uprights, axles, wheels and battery before you order anything.
 
 ## What it does
