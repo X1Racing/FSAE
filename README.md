@@ -4,7 +4,7 @@
 
 **Open the builder:** [https://x1racing.com/fsae](https://x1racing.com/fsae)
 
-That address is the hosted place to load this page. Publishing there is still in progress, so the link is the destination and is not confirmed live.
+That is the live page for this project.
 
 The copy in this repository is [`index.html`](./index.html). Download that file and open it in a browser to run the builder on your own machine.
 
