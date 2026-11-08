@@ -1,6 +1,6 @@
 # FSAE Chassis Builder
 
-**Version 1.2** · by Mac McAlpine, [X1Racing.com](https://x1racing.com) · [MIT License](LICENSE)
+**Version 1.3** · by Mac McAlpine, [X1Racing.com](https://x1racing.com) · [MIT License](LICENSE)
 
 **Open the builder:** [https://x1racing.com/fsae](https://x1racing.com/fsae)
 
@@ -37,6 +37,8 @@ The package contains a STEP solid per part (straight tubes laid along +Y, as tub
 Prices inside the builder are planning estimates from editable rates. They are not a quote. Vendor prices come from uploading the files on the vendor's site. SendCutSend's published 4130 round list is short (1.000 × .095 in and 1.000 × .065 in at the time of writing); the builder flags tube sizes outside it. The bent hoops are over 60 in and need a tube bender, not a tube laser.
 
 Straight tubes in the STEP files lie along +Y from the origin, one file per tube. OSHcut's material map uses 4130 sheet and round tube where that shop stocks them, and it notes a substitution when it does not.
+
+Version 1.3 bends the front and main hoops at a 76.2 mm (3.0 in) centerline radius, the radius of a 1.0 in round-tube die and the 3 × OD minimum for 1.0 in Size A tube. The builder also checks each hoop against OSHcut's bender limits: stocked 4130, at least 2.25 in of straight tube between bends and at the ends, and a developed length no longer than 235 in. Those shop checks are warnings. A live quote still lists OSHcut's own per-part manufacturability errors and warnings only when the claude.ai connector actually returns them.
 
 ## Live OSHcut quote
 

@@ -352,7 +352,8 @@ function solveShock(g, o) {
   best.mrMax = maxMR; 
   return best;
 }
-const HOOP_CLR = 89, RE_BUNG_CLR = 26, DAMPER_R = FOX.headR, BODY_FRAC = 0.56, TOWER_NODE = 60; // damper body radius and length share (top end), eye-to-tower-node offset
+// hoops bend on OSH Cut's 1.0 in round-tube die: 3.0 in centerline radius (also the FSAE 3 x OD minimum), 2.25 in straight between bends
+const HOOP_CLR = 76.2, HOOP_MIN_STRAIGHT = 57.15, RE_BUNG_CLR = 26, DAMPER_R = FOX.headR, BODY_FRAC = 0.56, TOWER_NODE = 60; // damper body radius and length share (top end), eye-to-tower-node offset
 function shockLowerAt(sh, g, st) { // lower eye at a kinematic state: on the upright (moves with it) or on the lower arm (turns about the pivots)
   if (sh.eyeLocal) { const F = uprightFrame(st.LBJ, st.UBJ, st.spin), l = sh.eyeLocal; return vadd(st.LBJ, vadd(vmul(F.fwd, l.x), vadd(vmul(F.out, l.y), vmul(F.k, l.z)))); }
   return rotAbout(sh.Lm, g.LIPr, vnorm(vsub(g.LIPf, g.LIPr)), st.th || 0);
@@ -1110,8 +1111,12 @@ function buildOnce(P, fast = false) {
       dev += -2 * CLR * Math.tan(beta / 2) + CLR * beta;
       bends.push({ node: h.pts[i], deg: beta * R2D, at: along });
     }
+    // straight lengths between bends (and at the ends) once each bend's tangent run is taken out: the bender needs HOOP_MIN_STRAIGHT
+    const tl = []; for (let i = 1; i < pts.length - 1; i++) { const d1 = vnorm(vsub(pts[i], pts[i - 1])), d2 = vnorm(vsub(pts[i + 1], pts[i])), be = Math.acos(Math.min(1, Math.max(-1, vdot(d1, d2)))); tl.push(be < 0.5 * D2R ? 0 : CLR * Math.tan(be / 2)); }
+    const straights = []; let run = 0; // merge segments across collinear nodes: only real bends split a straight
+    for (let i = 0; i < pts.length - 1; i++) { run += vlen(vsub(pts[i + 1], pts[i])) - (i > 0 ? tl[i - 1] : 0) - (i < pts.length - 2 ? tl[i] : 0); if (i === pts.length - 2 || tl[i] > 0) { straights.push(run); run = 0; } }
     const id = 'H' + hid++;
-    const p = { id, kind: 'hoop', cat: 'A', name: h.name, qty: 1, tube: std.A, hoop: h, pts, cut: dev, avg: dev, bends, CLR, copes: 0, mirror: false };
+    const p = { id, kind: 'hoop', cat: 'A', name: h.name, qty: 1, tube: std.A, hoop: h, pts, cut: dev, avg: dev, bends, CLR, straights, minStraight: Math.min(...straights), copes: 0, mirror: false };
     parts.push(p); h.part = id;
   });
   /* suspension & steering tubes */
@@ -1430,6 +1435,11 @@ function buildOnce(P, fast = false) {
   T(zMHt - zBR <= 160, 'Main Hoop Braces', 'Attached no more than 160 mm below top of main hoop', `${(zMHt - zBR).toFixed(0)} mm`);
   { const top = Math.max(N.FH_T.z, N['FH_T*'].z) + std.A.od / 2, att = N.FH_Ta || N.FH_T, below = top - (att.z + std.A.od / 2);
     T(below <= 50, 'Front Hoop Braces', 'Braces meet the bent front hoop within 50 mm below its top surface and run forward to the front bulkhead', `${below.toFixed(0)} mm below top`, true); }
+  for (const hp of parts.filter(p => p.kind === 'hoop')) {
+    const nm = hp.name.toLowerCase(), osh = oshTube(hp.tube);
+    T(HOOP_CLR >= 3 * hp.tube.od - 0.05, hp.name.startsWith('Front') ? 'Front Hoop' : 'Main Hoop', `${hp.name} bends at ${HOOP_CLR} mm centerline radius, at least 3 × the tube OD`, `${HOOP_CLR} mm (min ${(3 * hp.tube.od).toFixed(1)})`);
+    T(hp.minStraight >= HOOP_MIN_STRAIGHT && hp.cut <= 235 * 25.4 && !!osh, 'Fabrication', `${hp.name} can be bent by OSH Cut: ${hp.tube.label} 4130 on their 1.0 in die (3.0 in radius), at least 2.25 in straight between bends and at the ends, under 235 in long`, `${hp.minStraight.toFixed(0)} mm shortest straight, ${(hp.cut / 25.4).toFixed(0)} in long`, true);
+  }
   for (const b of bendFix) if (!b.k.endsWith('*')) T(true, 'Frame fit', `Tubes at the ${b.k.startsWith('FH') ? 'front' : 'main'} hoop ${(b.turn * R2D).toFixed(0)}° bend end on the ${HOOP_CLR} mm-radius bend, not the sharp corner (${b.off.toFixed(0)} mm inside it)`, 'on the bend');
   {
     const T0 = { x: xMH, z: zMHt }, dx = FHTp.x - T0.x, dz = FHTp.z - T0.z, L = Math.hypot(dx, dz);
@@ -1838,7 +1848,7 @@ function stepDocument(title, makers) {
   const rep = W.e(`ADVANCED_BREP_SHAPE_REPRESENTATION('${sstr(title)}',(${[origin, ...breps].join(',')}),${ctx})`);
   W.e(`SHAPE_DEFINITION_REPRESENTATION(${pds},${rep})`);
   const fname = sstr(title).replace(/[^A-Za-z0-9_-]+/g, '_');
-  return `ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('${sstr(title)}','License: MIT License https://opensource.org/licenses/MIT','Attribution: Mac McAlpine, X1Racing.com'),'2;1');\nFILE_NAME('${fname}.step','${new Date().toISOString().slice(0, 19)}',('Mac McAlpine'),('X1Racing.com'),'FSAE Chassis Builder v1.2','github.com/X1Racing/FSAE','MIT License');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));\nENDSEC;\nDATA;\n${W.L.join('\n')}\nENDSEC;\nEND-ISO-10303-21;\n`;
+  return `ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('${sstr(title)}','License: MIT License https://opensource.org/licenses/MIT','Attribution: Mac McAlpine, X1Racing.com'),'2;1');\nFILE_NAME('${fname}.step','${new Date().toISOString().slice(0, 19)}',('Mac McAlpine'),('X1Racing.com'),'FSAE Chassis Builder v1.3','github.com/X1Racing/FSAE','MIT License');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));\nENDSEC;\nDATA;\n${W.L.join('\n')}\nENDSEC;\nEND-ISO-10303-21;\n`;
 }
 /* STEP makers for a part (returns list of {name, makers}) */
 function stepMakersForMember(M, m) {
