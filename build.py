@@ -26,6 +26,7 @@ else:
         "<title>FSAE Chassis Builder</title>"
         "<meta name=\"description\" content=\"Design a rule-compliant FSAE chassis in your browser: set wheelbase, driver fit and suspension, check it against the Formula SAE rules, and export STEP and DXF files. Free and open source from X1 Racing.\">"
         "<link rel=\"canonical\" href=\"https://x1racing.com/fsae\">"
+        "<meta name=\"robots\" content=\"index,follow,max-image-preview:large\">"
         "<meta property=\"og:type\" content=\"website\">"
         "<meta property=\"og:site_name\" content=\"X1 Racing\">"
         "<meta property=\"og:url\" content=\"https://x1racing.com/fsae\">"

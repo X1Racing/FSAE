@@ -1,10 +1,22 @@
 # Changelog
 
+## 1.5 (2026-11-08)
+- Licensed under the MIT License. See LICENSE and NOTICE.md. Trademarks stay reserved.
+- Every tube now passes OSHcut's tube check: coped ends are cut at no more than 44 degrees from square, verified on OSHcut (S01 and S08 measured 44.0 and 44.1 degrees, no warnings).
+- Tube end cut paths spaced about 1.1 mm apart (44 points on 5/8 in tube, 72 on 1 in). Finer spacing made OSHcut read false bevel spikes up to 57 degrees.
+- Suspension arm tube is 0.625 x 0.065 in 4130, the wall OSHcut stocks (was 0.049, which OSHcut was substituting).
+- Brake pedal ratio holes 16 mm apart so they no longer overlap; new check that plate holes leave a solid web between them.
+- The OSHcut quote window shows OSHcut's own measured bevel and pivot angles on any tube it flags.
+- Smaller STEP files (shared points, 5-decimal coordinates).
+
+## 1.4 (2026-11-08)
+- "Quote on OSHcut" is a prominent header button: one press uploads every laser-cut part to the viewer's OSHcut cart through the OSH Cut connector and prices it, with no AI in the loop; the cheapest total and a cart link show under the button.
+- SendCutSend reduced to a small note: plates only, the tubes need a shop with laser tube cutting.
+
 ## 1.3 (2026-11-08)
 - Hoops bent to OSHcut's tooling: 3.0 in (76.2 mm) centerline radius on their 1.0 in round-tube die, which is also the FSAE 3 x OD minimum.
 - New checks: FSAE hoop bend radius at least 3 x OD; each hoop fits OSHcut's bender (stocked 4130 tube, 2.25 in minimum straight between bends and at the ends, 235 in maximum length).
-- Live OSHcut quote lists OSHcut's own manufacturability errors and warnings per part. That quote runs only inside claude.ai.
-- Licensed under the MIT License. See LICENSE and NOTICE.md. Trademarks stay reserved.
+- Live OSHcut quote lists OSHcut's own manufacturability errors and warnings per part.
 
 ## 1.2 (2026-11-08)
 - Live OSHcut quote: sends every laser part (STEP, quantity, OSHcut material) to the viewer's own OSHcut cart through the claude.ai OSH Cut connector and prices it per lead time; shows OSHcut's manufacturability errors and warnings per part; a re-quote replaces the builder's earlier parts in the cart.

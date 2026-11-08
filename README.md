@@ -1,6 +1,6 @@
 # FSAE Chassis Builder
 
-**Version 1.3** · by Mac McAlpine, [X1Racing.com](https://x1racing.com) · [MIT License](LICENSE)
+**Version 1.5** · by Mac McAlpine, [X1Racing.com](https://x1racing.com) · [MIT License](LICENSE)
 
 **Open the builder:** [https://x1racing.com/fsae](https://x1racing.com/fsae)
 
@@ -21,7 +21,7 @@ One parametric model, from rules to cut files.
 - **Shocks.** FOX DHX and DHX2 coil-overs from a catalog, chosen separately front and rear. The rear defaults to a longer DHX 230 × 65. Front eyes sit on a through-bolt through both lower-arm legs. Rear eyes sit on a compact clevis on the upright that straddles the toe link. The builder checks spring and damper clearance through travel and reports steer moment from the rear shock.
 - **Driver.** A 95th percentile driver sets hoop heights, seat, pedal box, and wheel reach, with clearance checks for legs, rack, and column. The driver sits on a seat shell and foam over the floor tubes. Egress can be animated.
 - **Drivetrain.** Chain drive to a limited-slip differential with halfshafts. Laser-cut uprights use bolt-on flange bearings and Wilwood PS-1 calipers, with a laser-cut rotor and a simple hub. Wheels are generic 13 in or 10 in, with a place for a small motorcycle battery.
-- **Fabrication model.** Laser-cut self-jigging uprights, turned clevis tabs, coped tubes, bent hoops, and sheet-metal build jigs: two plates per tube, clear of the welds, egg-crated onto spars that hook over the center section. Coped tube ends are drawn the way a tube laser cuts them: bevels held within 45 degrees, with the deeper edge kept on the mating tube.
+- **Fabrication model.** Laser-cut self-jigging uprights, turned clevis tabs, coped tubes, bent hoops, and sheet-metal build jigs: two plates per tube, clear of the welds, egg-crated onto spars that hook over the center section. Coped tube ends stay on the mating tube at the deeper edge and are held to 44 degrees from square, one degree inside a 45-degree tube-laser limit. Cut-path points are about 1.1 mm apart. Suspension arm tube is 0.625 × 0.065 in 4130, a wall OSHcut stocks. Brake-pedal ratio holes are 16 mm apart, and plate holes must keep a solid web between them.
 - **Parts.** Click a tube or plate in the list or the 3D view to open its drawing. Save and load a `design.json` to share a design.
 
 ## From inputs to files
@@ -30,7 +30,7 @@ One parametric model, from rules to cut files.
 2. Watch the Checks tab. Fix any Formula SAE rule failure, then review the design checks.
 3. Use the Geometry tab for camber, bump steer, Ackermann, uprights, and shocks.
 4. Press Optimize to search the main dimensions for a lighter, cheaper frame that still passes the hard rule checks.
-5. Export one STEP package. Upload those files to [SendCutSend](https://sendcutsend.com) or [OSHcut](https://www.oshcut.com) when you want a price from the vendor.
+5. Press **Quote on OSHcut** only inside claude.ai, where your own connector can price the cart. On this site, export the STEP package and upload it yourself. [SendCutSend](https://sendcutsend.com) is treated as a plate shop; the tubes need a shop that laser-cuts tube.
 
 The package contains a STEP solid per part (straight tubes laid along +Y, as tube-laser shops ask), the frame assembly, plate DXFs, 1:1 tube cope templates, hoop drawings, a manifest, and `design.json`.
 
