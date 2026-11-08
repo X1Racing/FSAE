@@ -1,13 +1,18 @@
 # Changelog
 
+## 1.3 (2026-11-08)
+- Hoops bent to OSHcut's tooling: 3.0 in (76.2 mm) centerline radius on their 1.0 in round-tube die, which is also the FSAE 3 x OD minimum.
+- New checks: FSAE hoop bend radius at least 3 x OD; each hoop fits OSHcut's bender (stocked 4130 tube, 2.25 in minimum straight between bends and at the ends, 235 in maximum length).
+- Live OSHcut quote lists OSHcut's own manufacturability errors and warnings per part. That quote runs only inside claude.ai.
+- Licensed under the MIT License. See LICENSE and NOTICE.md. Trademarks stay reserved.
+
 ## 1.2 (2026-11-08)
 - Live OSHcut quote: sends every laser part (STEP, quantity, OSHcut material) to the viewer's own OSHcut cart through the claude.ai OSH Cut connector and prices it per lead time; shows OSHcut's manufacturability errors and warnings per part; a re-quote replaces the builder's earlier parts in the cart.
 - OSHcut material map: 4130 sheet and round tube where stocked, noted substitutions otherwise.
 - Coped tube ends drawn the way a tube laser cuts them: bevels held within 45 degrees, the deeper edge kept on the mating tube so the joint fits before welding.
 - Straight tubes in the STEP files lie along +Y from the origin, one per file.
 - One "Export STEP package" button; Save and Load design.json.
-- Homepage: setup steps for the OSHcut connector. Live quotes run only inside claude.ai; the hosted page does not call OSHcut.
-- Licensed under the MIT License. See LICENSE and NOTICE.md. Trademarks stay reserved.
+- Homepage: setup steps for the OSHcut connector.
 
 ## 1.1 (2026-11-07)
 - Renamed to FSAE Chassis Builder; designed around a hypothetical single-cylinder engine.
