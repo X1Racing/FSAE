@@ -1,6 +1,6 @@
 # Notice
 
-FSAE Chassis Builder, version 1.3
+FSAE Chassis Builder, version 1.5
 Copyright (c) 2026 Mac McAlpine, X1Racing.com (Flying Car Grand Prix)
 
 The code, the prompt, and the design files the builder exports are licensed under

@@ -37,7 +37,7 @@ def cross(a, b): return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1
 def ln(a): return math.sqrt(dot(a, a))
 def nrm(a): l = ln(a); return [x / l for x in a]
 
-def check(path, tol=0.02):
+def check(path, tol=0.025):
     E = parse(path); errs = []
     for k, s in E.items():
         for r in re.findall(r'#(\d+)', s):

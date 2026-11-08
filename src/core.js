@@ -47,7 +47,7 @@ const RULE_MIN = { A: { od: 25.0, t: 2.4 }, B: { od: 25.0, t: 1.6 }, C: { od: 25
 const TUBE_STD = {
   imperial: {
     A: { od: 25.4, t: 2.413, label: '1.000 × 0.095 in' }, B: { od: 25.4, t: 1.651, label: '1.000 × 0.065 in' },
-    C: { od: 25.4, t: 1.245, label: '1.000 × 0.049 in' }, arm: { od: 15.875, t: 1.245, label: '0.625 × 0.049 in' },
+    C: { od: 25.4, t: 1.245, label: '1.000 × 0.049 in' }, arm: { od: 15.875, t: 1.651, label: '0.625 × 0.065 in' },
     steer: { od: 19.05, t: 1.651, label: '0.750 × 0.065 in' }
   },
   metric: {
@@ -1386,7 +1386,7 @@ function buildOnce(P, fast = false) {
   const pt = rrect(trayL, 230, 10); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => pt.hole(sx * (trayL / 2 - 15), sy * 100, 6.6));
   [[-60, 55], [-60, 85], [-60, -55], [-60, -95]].forEach(([x, y]) => pt.hole(x - trayL / 2 + 120, y, 6.6));
   plate('Pedal tray', 'AL6', 1, pt, 'Floor, front bulkhead to heel', 'Bolts to tabs on lower front rails');
-  plate('Brake pedal', 'AL10', 1, pedalShape(230, [42, 46, 50], false), 'Pedal tray', '~5:1 ratio at 46 mm hole');
+  plate('Brake pedal', 'AL10', 1, pedalShape(230, [30, 46, 62], false), 'Pedal tray', 'Pedal ratio holes 16 mm apart (~7.7, 5.0 and 3.7:1); ~5:1 at the middle hole');
   plate('Throttle pedal', 'AL6', 1, pedalShape(215, [40], true), 'Pedal tray', 'Return spring hole; no cable modeled');
   const pb = tabShape(40, 48, 10.2, null); pb.hole(-10, 8, 5.2).hole(10, 8, 5.2);
   plate('Pedal pivot bracket', 'AL6', 4, pb, 'Pedal tray', 'Weld or bolt to tray');
@@ -1531,6 +1531,12 @@ function buildOnce(P, fast = false) {
   { let worst = 1e9; for (const g of [gF, gR]) for (const p of [g.LIPf, g.LIPr, g.UIPf, g.UIPr]) for (const k of Object.keys(N)) if (!k.endsWith('*')) worst = Math.min(worst, vlen(vsub(N[k], p)));
     T(worst >= 40, 'Frame fit', 'Every A-arm clevis pair sits on plain rail, 40 mm or more from any tube node', `${worst.toFixed(0)} mm`, true); }
   T(diffCut.saddle >= 4 && diffCut.holeGap >= 6 && diffCut.bolt >= 6, 'Fabrication', 'Differential carrier plates are cut back at the rear bulkhead so the rear bulkhead diagonal goes in after them (open cut-back, no hole to thread); the saddle and diff bores keep their material', `cut-back ${(diffCut.x - 30).toFixed(0)} mm ahead of the bulkhead above ${diffCut.z.toFixed(0)} mm; ${Math.min(diffCut.holeGap, diffCut.bolt).toFixed(0)} mm to the diff bolt circle`, true);
+  { // laser webs: holes in a plate must not overlap and need at least one plate thickness of metal between them
+    const thin = [];
+    for (const p of parts.filter(p => p.kind === 'plate' && p.shape && p.shape.holes)) { const t = (PMAT[p.mat] || { t: 3 }).t, H = p.shape.holes.filter(h => h.r);
+      for (let i = 0; i < H.length; i++) for (let j = i + 1; j < H.length; j++) { const web = Math.hypot(H[i].x - H[j].x, H[i].y - H[j].y) - H[i].r - H[j].r; if (web < Math.max(1.5, t * 0.6)) thin.push(`${p.id} ${p.name} (${web.toFixed(1)} mm)`); } }
+    T(!thin.length, 'Fabrication', 'Plate holes keep a web of at least 0.6 × the plate thickness between them, so the laser does not burn through or cut overlapping contours', thin.length ? thin.slice(0, 4).join(', ') : 'all clear', true);
+  }
   if (jigs.spars.length) T(jigs.sparClear >= 5, 'Build jigs', 'Longitudinal spars lock the jig plates together and stay clear of the first-layer tubes', `${jigs.sparClear.toFixed(0)} mm`, true);
   if (jigs.stations.length) { const short = jigs.perTube.filter(t => t.have < t.need), one = jigs.perTube.filter(t => t.need === 1);
     T(!short.length && !jigs.raisedUnsupported.length, 'Build jigs', `${jigs.stations.length} laser-cut jig plates hold the raised first layer of the front and rear sections at true height: every raised tube sits in two plates, one near each end${one.length ? ' (' + [...new Set(one.map(t => t.name.toLowerCase()))].join(', ') + ' too short for two: one plate mid-length)' : ''}; the center section's floor tubes sit on the table`, short.length ? 'missing: ' + [...new Set(short.map(t => t.name))].join(', ') : `${jigs.stations.length} stations`, true);
@@ -1708,12 +1714,14 @@ class StepW {
   constructor() { this.n = 0; this.L = []; }
   e(s) { this.n++; this.L.push(`#${this.n}=${s};`); return '#' + this.n; }
   pt(p) { return this.e(`CARTESIAN_POINT('',(${sf(p.x)},${sf(p.y)},${sf(p.z)}))`); }
+  ptc(p) { // shared control point: a cope's edge curve and its cut surface reuse the same points (smaller files)
+    const k = `${sf(p.x)},${sf(p.y)},${sf(p.z)}`; this._pc = this._pc || new Map(); if (!this._pc.has(k)) this._pc.set(k, this.e(`CARTESIAN_POINT('',(${k}))`)); return this._pc.get(k); }
   dir(d) { d = vnorm(d); return this.e(`DIRECTION('',(${sf(d.x)},${sf(d.y)},${sf(d.z)}))`); }
   ax(o, z, x) { return this.e(`AXIS2_PLACEMENT_3D('',${this.pt(o)},${this.dir(z)},${this.dir(x)})`); }
   vtx(p) { return this.e(`VERTEX_POINT('',${this.pt(p)})`); }
   circle(o, z, x, r) { return this.e(`CIRCLE('',${this.ax(o, z, x)},${sf(r)})`); }
   poly(pts) { // closed degree-1 B-spline through pts (pts[0] repeated at end)
-    const ids = pts.map(p => this.pt(p)), n = ids.length;
+    const ids = pts.map(p => this.ptc(p)), n = ids.length;
     const mult = [2, ...Array(n - 2).fill(1), 2], knots = Array.from({ length: n }, (_, i) => sf(i));
     return this.e(`B_SPLINE_CURVE_WITH_KNOTS('',1,(${ids.join(',')}),.UNSPECIFIED.,.T.,.F.,(${mult.join(',')}),(${knots.join(',')}),.UNSPECIFIED.)`);
   }
@@ -1728,7 +1736,7 @@ class StepW {
   cyl(o, z, x, r) { return this.e(`CYLINDRICAL_SURFACE('',${this.ax(o, z, x)},${sf(r)})`); }
   plane(o, z, x) { return this.e(`PLANE('',${this.ax(o, z, x)})`); }
   ruled(rowA, rowB, closed) { // degree 1 x 1 B-spline surface between two matching point rows (u: A -> B, v: along the rows)
-    const a = rowA.map(p => this.pt(p)), b = rowB.map(p => this.pt(p)), n = a.length;
+    const a = rowA.map(p => this.ptc(p)), b = rowB.map(p => this.ptc(p)), n = a.length;
     const mv = [2, ...Array(n - 2).fill(1), 2], kv = Array.from({ length: n }, (_, i) => sf(i));
     return this.e(`B_SPLINE_SURFACE_WITH_KNOTS('',1,1,((${a.join(',')}),(${b.join(',')})),.UNSPECIFIED.,.F.,${closed ? '.T.' : '.F.'},.F.,(2,2),(${mv.join(',')}),(0.,1.),(${kv.join(',')}),.UNSPECIFIED.)`);
   }
@@ -1742,12 +1750,13 @@ function copeS(ax, b, w, R, rr) {
   return (c * k + Math.sqrt(Math.max(0, k * k + q * (R * R - rr * rr)))) / q;
 }
 /* Straight tube from n1 to n2, each end square (null) or coped to {b, R} whose axis passes through that node */
-function stepTube(W, name, n1, n2, od, t, end1, end2, NS = 180) {
+function stepTube(W, name, n1, n2, od, t, end1, end2, NS = 0) {
+  NS = NS || Math.max(36, 4 * Math.round(Math.PI * od / 1.1 / 4)); // ~1.1 mm between cut-path points: OSH Cut reads finer spacing as bevel spikes
   // Tube lasers bevel at most 45 deg from square to the wall. At each angle around the tube the cut runs straight through the
   // wall from the OD cope depth to the ID cope depth; where that would lean past the limit, the deeper edge stays on the mating
   // tube and the other edge is pulled back to the 45 deg line, so neither edge runs into the mating tube (the small gap left
   // at the shallow edge is filled by the weld)
-  const BEVEL_TAN = Math.tan(44 * D2R);
+  const BEVEL_TAN = Math.tan(44 * D2R); // 1 deg under the 45 deg limit, verified on OSH Cut at 72 points per end
   const d = vsub(n2, n1), Lc = vlen(d), a = vmul(d, 1 / Lc), e1 = perp(a), e2 = vcross(a, e1), ro = od / 2, ri = ro - t;
   const wv = (th, rr) => vadd(vmul(e1, rr * Math.cos(th)), vmul(e2, rr * Math.sin(th)));
   const rows = {};
@@ -1848,7 +1857,7 @@ function stepDocument(title, makers) {
   const rep = W.e(`ADVANCED_BREP_SHAPE_REPRESENTATION('${sstr(title)}',(${[origin, ...breps].join(',')}),${ctx})`);
   W.e(`SHAPE_DEFINITION_REPRESENTATION(${pds},${rep})`);
   const fname = sstr(title).replace(/[^A-Za-z0-9_-]+/g, '_');
-  return `ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('${sstr(title)}','License: MIT License https://opensource.org/licenses/MIT','Attribution: Mac McAlpine, X1Racing.com'),'2;1');\nFILE_NAME('${fname}.step','${new Date().toISOString().slice(0, 19)}',('Mac McAlpine'),('X1Racing.com'),'FSAE Chassis Builder v1.3','github.com/X1Racing/FSAE','MIT License');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));\nENDSEC;\nDATA;\n${W.L.join('\n')}\nENDSEC;\nEND-ISO-10303-21;\n`;
+  return `ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('${sstr(title)}','License: MIT License https://opensource.org/licenses/MIT','Attribution: Mac McAlpine, X1Racing.com'),'2;1');\nFILE_NAME('${fname}.step','${new Date().toISOString().slice(0, 19)}',('Mac McAlpine'),('X1Racing.com'),'FSAE Chassis Builder v1.5','github.com/X1Racing/FSAE','MIT License');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));\nENDSEC;\nDATA;\n${W.L.join('\n')}\nENDSEC;\nEND-ISO-10303-21;\n`;
 }
 /* STEP makers for a part (returns list of {name, makers}) */
 function stepMakersForMember(M, m) {
@@ -1893,7 +1902,7 @@ function stepPlate(W, name, shape, t) {
 // tube-laser vendors want one straight tube per file, lying along +Y from the origin: rigidly move every point and direction
 function stepAlignY(text, a, b) {
   const u = vnorm(vsub(b, a)), ref = Math.abs(u.z) < 0.9 ? v(0, 0, 1) : v(1, 0, 0), e1 = vnorm(vcross(u, ref)), e3 = vcross(e1, u);
-  const R = w => [vdot(w, e1), vdot(w, u), vdot(w, e3)], f = x => (Math.abs(x) < 5e-7 ? 0 : x).toFixed(6);
+  const R = w => [vdot(w, e1), vdot(w, u), vdot(w, e3)], f = x => sf(Math.abs(x) < 5e-6 ? 0 : Math.round(x * 1e5) / 1e5);
   // leave the representation's own world placement alone; move only the geometry
   const keep = new Set();
   for (const m of text.matchAll(/SHAPE_REPRESENTATION\([^;]*/g)) for (const r of m[0].matchAll(/#(\d+)/g)) {
@@ -1945,7 +1954,7 @@ const OSH = {
   tubes: [
     { od: 25.4, t: 1.245, id: 310 }, { od: 25.4, t: 1.651, id: 275 }, { od: 25.4, t: 2.413, id: 345 }, { od: 19.05, t: 1.651, id: 273 },
     { od: 22.225, t: 2.108, id: 320, sub: '1020 DOM 0.875 × .083 (no 4130 in that size)' },
-    { od: 15.875, t: 1.245, id: 315, sub: '4130 0.625 × .065 (no .049 wall stocked)' }
+    { od: 15.875, t: 1.651, id: 315 }
   ]
 };
 function oshTube(t) { return t && OSH.tubes.find(q => Math.abs(q.od - t.od) < 0.3 && Math.abs(q.t - t.t) < 0.15) || null; }

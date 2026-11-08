@@ -29,5 +29,6 @@ Human factors, viewer and parts
 - List every tube, plate, arm, link and turned part. Clicking a part in the list or the 3D view opens a simple DXF viewer for that part.
 
 Exports
-- Export one STEP package for SendCutSend or OSHcut. Every part gets a drawing and a STEP model: coped tubes, both bent hoops, arm legs and links, plates as solids, turned parts and the full frame assembly. Include plate DXFs that follow each vendor's file rules, 1:1 tube wrap templates, a parts manifest and an order sheet, and check that each package covers every part.
+- Add a prominent Quote on OSHcut button that runs from the page itself through the viewer's OSH Cut connector (no AI in the loop): upload every laser part with its quantity and OSHcut material, price the cart per lead time, list OSHcut's manufacturability warnings, and link to the cart for checkout.
+- Export one STEP package for OSHcut or any shop with laser tube cutting (SendCutSend can cut the plates only). Every part gets a drawing and a STEP model: coped tubes, both bent hoops, arm legs and links, plates as solids, turned parts and the full frame assembly. Include plate DXFs that follow each vendor's file rules, 1:1 tube wrap templates, a parts manifest and an order sheet, and check that each package covers every part.
 - Show estimated pricing with editable rates, and get live pricing from the vendor if it can be automated.
