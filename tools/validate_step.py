@@ -69,9 +69,26 @@ def check(path, tol=0.02):
         if t == 'TOROIDAL_SURFACE':
             o, z, _, _ = AX(ref(a[1])); R, r_ = float(a[2]), float(a[3]); d = sub(p, o); h = dot(d, z); rad = ln(sub(d, mul(z, h)))
             return abs(math.hypot(rad - R, h) - r_)
+        if t == 'B_SPLINE_SURFACE_WITH_KNOTS':
+            A, B = bs_rows(r); best = 1e9
+            for i in range(len(A) - 1):
+                for (p0, p1) in ((A[i], A[i+1]), (B[i], B[i+1]), (A[i], B[i])):
+                    dv = sub(p1, p0); L2 = dot(dv, dv) or 1e-12; tt = max(0, min(1, dot(sub(p, p0), dv) / L2)); best = min(best, ln(sub(p, add(p0, mul(dv, tt)))))
+            return best
         errs.append('unknown surface ' + t); return 0
+    bs_cache = {}
+    def bs_rows(r):
+        if r not in bs_cache:
+            a = args(E[r]); grid = a[3]
+            rows_ = [[P(int(x)) for x in re.findall(r'#(\d+)', row)] for row in re.findall(r'\(([^()]*)\)', grid)]
+            bs_cache[r] = (rows_[0], rows_[1])
+        return bs_cache[r]
     def surf_normal(r, p):
-        t = name(E[r]); a = args(E[r]); o, z, _, _ = AX(ref(a[1]))
+        t = name(E[r]); a = args(E[r])
+        if t == 'B_SPLINE_SURFACE_WITH_KNOTS':
+            A, B = bs_rows(r); i = min(range(len(A) - 1), key=lambda k: ln(sub(p, mul(add(add(A[k], A[k+1]), add(B[k], B[k+1])), 0.25))))
+            return nrm(cross(sub(B[i], A[i]), sub(A[i+1], A[i])))
+        o, z, _, _ = AX(ref(a[1]))
         if t == 'PLANE': return z
         d = sub(p, o)
         if t == 'CYLINDRICAL_SURFACE': return nrm(sub(d, mul(z, dot(d, z))))
