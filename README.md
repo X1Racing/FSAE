@@ -1,6 +1,6 @@
 # FSAE Chassis Builder
 
-**Version 1.1** · by Mac McAlpine, [X1Racing.com](https://x1racing.com) · [MIT License](LICENSE)
+**Version 1.2** · by Mac McAlpine, [X1Racing.com](https://x1racing.com) · [MIT License](LICENSE)
 
 **Open the builder:** [https://x1racing.com/fsae](https://x1racing.com/fsae)
 
@@ -21,7 +21,7 @@ One parametric model, from rules to cut files.
 - **Shocks.** FOX DHX and DHX2 coil-overs from a catalog, chosen separately front and rear. The rear defaults to a longer DHX 230 × 65. Front eyes sit on a through-bolt through both lower-arm legs. Rear eyes sit on a compact clevis on the upright that straddles the toe link. The builder checks spring and damper clearance through travel and reports steer moment from the rear shock.
 - **Driver.** A 95th percentile driver sets hoop heights, seat, pedal box, and wheel reach, with clearance checks for legs, rack, and column. The driver sits on a seat shell and foam over the floor tubes. Egress can be animated.
 - **Drivetrain.** Chain drive to a limited-slip differential with halfshafts. Laser-cut uprights use bolt-on flange bearings and Wilwood PS-1 calipers, with a laser-cut rotor and a simple hub. Wheels are generic 13 in or 10 in, with a place for a small motorcycle battery.
-- **Fabrication model.** Laser-cut self-jigging uprights, turned clevis tabs, coped tubes, bent hoops, and sheet-metal build jigs: two plates per tube, clear of the welds, egg-crated onto spars that hook over the center section.
+- **Fabrication model.** Laser-cut self-jigging uprights, turned clevis tabs, coped tubes, bent hoops, and sheet-metal build jigs: two plates per tube, clear of the welds, egg-crated onto spars that hook over the center section. Coped tube ends are drawn the way a tube laser cuts them: bevels held within 45 degrees, with the deeper edge kept on the mating tube.
 - **Parts.** Click a tube or plate in the list or the 3D view to open its drawing. Save and load a `design.json` to share a design.
 
 ## From inputs to files
@@ -35,6 +35,12 @@ One parametric model, from rules to cut files.
 The package contains a STEP solid per part (straight tubes laid along +Y, as tube-laser shops ask), the frame assembly, plate DXFs, 1:1 tube cope templates, hoop drawings, a manifest, and `design.json`.
 
 Prices inside the builder are planning estimates from editable rates. They are not a quote. Vendor prices come from uploading the files on the vendor's site. SendCutSend's published 4130 round list is short (1.000 × .095 in and 1.000 × .065 in at the time of writing); the builder flags tube sizes outside it. The bent hoops are over 60 in and need a tube bender, not a tube laser.
+
+Straight tubes in the STEP files lie along +Y from the origin, one file per tube. OSHcut's material map uses 4130 sheet and round tube where that shop stocks them, and it notes a substitution when it does not.
+
+## Live OSHcut quote
+
+A live cart quote is available only inside claude.ai, and only after you add your own OSH Cut connector (Settings → Connectors, name `oshcut`, server URL `https://app.oshcut.com/api/mcp`) and press **Quote this design on OSHcut**. The hosted page at [x1racing.com/fsae](https://x1racing.com/fsae) and any ordinary browser do not have `window.claude.use`. Opening the quote there does not upload parts, request a price, or invent one. Export the STEP package and upload it yourself. Nothing is ordered until you check out on OSHcut.
 
 ## Run and build locally
 

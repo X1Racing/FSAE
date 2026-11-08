@@ -1717,6 +1717,11 @@ class StepW {
   }
   cyl(o, z, x, r) { return this.e(`CYLINDRICAL_SURFACE('',${this.ax(o, z, x)},${sf(r)})`); }
   plane(o, z, x) { return this.e(`PLANE('',${this.ax(o, z, x)})`); }
+  ruled(rowA, rowB, closed) { // degree 1 x 1 B-spline surface between two matching point rows (u: A -> B, v: along the rows)
+    const a = rowA.map(p => this.pt(p)), b = rowB.map(p => this.pt(p)), n = a.length;
+    const mv = [2, ...Array(n - 2).fill(1), 2], kv = Array.from({ length: n }, (_, i) => sf(i));
+    return this.e(`B_SPLINE_SURFACE_WITH_KNOTS('',1,1,((${a.join(',')}),(${b.join(',')})),.UNSPECIFIED.,.F.,${closed ? '.T.' : '.F.'},.F.,(2,2),(${mv.join(',')}),(0.,1.),(${kv.join(',')}),.UNSPECIFIED.)`);
+  }
   torus(o, z, x, R, r) { return this.e(`TOROIDAL_SURFACE('',${this.ax(o, z, x)},${sf(R)},${sf(r)})`); }
   solid(name, faces) { return this.e(`MANIFOLD_SOLID_BREP('${sstr(name)}',${this.e(`CLOSED_SHELL('',(${faces.join(',')}))`)})`); }
 }
@@ -1728,13 +1733,23 @@ function copeS(ax, b, w, R, rr) {
 }
 /* Straight tube from n1 to n2, each end square (null) or coped to {b, R} whose axis passes through that node */
 function stepTube(W, name, n1, n2, od, t, end1, end2, NS = 180) {
+  // Tube lasers bevel at most 45 deg from square to the wall. At each angle around the tube the cut runs straight through the
+  // wall from the OD cope depth to the ID cope depth; where that would lean past the limit, the deeper edge stays on the mating
+  // tube and the other edge is pulled back to the 45 deg line, so neither edge runs into the mating tube (the small gap left
+  // at the shallow edge is filled by the weld)
+  const BEVEL_TAN = Math.tan(44 * D2R);
   const d = vsub(n2, n1), Lc = vlen(d), a = vmul(d, 1 / Lc), e1 = perp(a), e2 = vcross(a, e1), ro = od / 2, ri = ro - t;
   const wv = (th, rr) => vadd(vmul(e1, rr * Math.cos(th)), vmul(e2, rr * Math.sin(th)));
+  const rows = {};
   const endCurve = (which, rr) => {
     const end = which === 1 ? end1 : end2, base = which === 1 ? n1 : n2, ax = which === 1 ? a : vmul(a, -1);
     if (!end) { const p0 = vadd(base, wv(0, rr)); return { c: W.circle(base, a, e1, rr), v: W.vtx(p0), p0 }; }
     const pts = [];
-    for (let i = 0; i <= NS; i++) { const th = 2 * Math.PI * (i % NS) / NS, w = wv(th, rr), s = copeS(ax, end.b, w, end.R, rr); pts.push(vadd(vadd(base, vmul(ax, s)), w)); }
+    for (let i = 0; i <= NS; i++) { const th = 2 * Math.PI * (i % NS) / NS;
+      let so = copeS(ax, end.b, wv(th, ro), end.R, ro), si = copeS(ax, end.b, wv(th, ri), end.R, ri); const lim = t * BEVEL_TAN;
+      if (si > so + lim) so = si - lim; else if (so > si + lim) si = so - lim;
+      pts.push(vadd(vadd(base, vmul(ax, rr === ro ? so : si)), wv(th, rr))); }
+    (rows[which] = rows[which] || {})[rr === ro ? 'o' : 'i'] = pts;
     return { c: W.poly(pts), v: W.vtx(pts[0]), p0: pts[0] };
   };
   const C1o = endCurve(1, ro), C1i = endCurve(1, ri), C2o = endCurve(2, ro), C2i = endCurve(2, ri);
@@ -1745,9 +1760,10 @@ function stepTube(W, name, n1, n2, od, t, end1, end2, NS = 180) {
   faces.push(W.face([[[[E1i, false], [Si, true], [E2i, true], [Si, false]], true]], W.cyl(n1, a, e1, ri), false));
   const endFace = (which, Eo, Ei) => {
     const end = which === 1 ? end1 : end2, base = which === 1 ? n1 : n2, nrm = which === 1 ? vmul(a, -1) : a;
-    const surf = end ? W.cyl(base, end.b, perp(end.b), end.R) : W.plane(base, nrm, e1);
     const outerS = which === 2, innerS = which === 1;
-    return W.face([[[[Eo, outerS]], true], [[[Ei, innerS]], false]], surf, !end);
+    if (!end) return W.face([[[[Eo, outerS]], true], [[[Ei, innerS]], false]], W.plane(base, nrm, e1), true);
+    // ruled cut surface outer -> inner (each ruling is the laser line); its normal is about (-r) x theta = -a, out of end 1 and into end 2
+    return W.face([[[[Eo, outerS]], true], [[[Ei, innerS]], false]], W.ruled(rows[which].o, rows[which].i, true), which === 1);
   };
   faces.push(endFace(1, E1o, E1i), endFace(2, E2o, E2i));
   return W.solid(name, faces);
@@ -1822,7 +1838,7 @@ function stepDocument(title, makers) {
   const rep = W.e(`ADVANCED_BREP_SHAPE_REPRESENTATION('${sstr(title)}',(${[origin, ...breps].join(',')}),${ctx})`);
   W.e(`SHAPE_DEFINITION_REPRESENTATION(${pds},${rep})`);
   const fname = sstr(title).replace(/[^A-Za-z0-9_-]+/g, '_');
-  return `ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('${sstr(title)}','License: MIT License https://opensource.org/licenses/MIT','Attribution: Mac McAlpine, X1Racing.com'),'2;1');\nFILE_NAME('${fname}.step','${new Date().toISOString().slice(0, 19)}',('Mac McAlpine'),('X1Racing.com'),'FSAE Chassis Builder v1.0','github.com/X1Racing/FSAE','MIT License');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));\nENDSEC;\nDATA;\n${W.L.join('\n')}\nENDSEC;\nEND-ISO-10303-21;\n`;
+  return `ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('${sstr(title)}','License: MIT License https://opensource.org/licenses/MIT','Attribution: Mac McAlpine, X1Racing.com'),'2;1');\nFILE_NAME('${fname}.step','${new Date().toISOString().slice(0, 19)}',('Mac McAlpine'),('X1Racing.com'),'FSAE Chassis Builder v1.2','github.com/X1Racing/FSAE','MIT License');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));\nENDSEC;\nDATA;\n${W.L.join('\n')}\nENDSEC;\nEND-ISO-10303-21;\n`;
 }
 /* STEP makers for a part (returns list of {name, makers}) */
 function stepMakersForMember(M, m) {
@@ -1912,7 +1928,18 @@ function scsPlateIssues(p) {
 }
 // SendCutSend 4130 round tube list as published Nov 2026: 1.00 x .095 in and 25.4 x 1.65 mm (1.000 x .065 in); other sizes go to another tube-laser shop or get cut by hand
 SCS.tube4130 = [[25.4, 2.413], [25.4, 1.651]];
+// OSH Cut stock (list_materials, Nov 2026): sheet material_sheet_id by plate code; round tube material_tube_id by OD/wall (mm).
+// 4130 cold drawn where stocked; `sub` notes a substitution the cart will use
+const OSH = {
+  sheets: { ST3: 151, ST5: 153, ST6: 154, AL1: 14, AL3: 15, AL6: 76, AL10: 79 },
+  tubes: [
+    { od: 25.4, t: 1.245, id: 310 }, { od: 25.4, t: 1.651, id: 275 }, { od: 25.4, t: 2.413, id: 345 }, { od: 19.05, t: 1.651, id: 273 },
+    { od: 22.225, t: 2.108, id: 320, sub: '1020 DOM 0.875 × .083 (no 4130 in that size)' },
+    { od: 15.875, t: 1.245, id: 315, sub: '4130 0.625 × .065 (no .049 wall stocked)' }
+  ]
+};
+function oshTube(t) { return t && OSH.tubes.find(q => Math.abs(q.od - t.od) < 0.3 && Math.abs(q.t - t.t) < 0.15) || null; }
 function scsTubeIssues(p) { const iss = []; if (p.cut > SCS.tubeMaxLen) iss.push(`length ${p.cut.toFixed(0)} mm over 60 in`);
   const t = p.tube; if (t && !SCS.tube4130.some(([od, w]) => Math.abs(od - t.od) < 0.3 && Math.abs(w - t.t) < 0.15)) iss.push(`${t.label} not in the SendCutSend 4130 round list (1.000 × .095, 1.000 × .065 in): upsize, use another tube-laser shop, or cut by hand`);
   return iss; }
-if (typeof module !== 'undefined') module.exports = { SHOCKS, FOX, withShock, scsPlateIssues, scsTubeIssues, SCS, stepFilesForPart, stepFrameAssembly, build, partCost, DEFAULT_RATES, partEntities, dxfText, memberTris, segTris, stlBinary, BUY, WHEELS };
+if (typeof module !== 'undefined') module.exports = { OSH, oshTube, SHOCKS, FOX, withShock, scsPlateIssues, scsTubeIssues, SCS, stepFilesForPart, stepFrameAssembly, build, partCost, DEFAULT_RATES, partEntities, dxfText, memberTris, segTris, stlBinary, BUY, WHEELS };
